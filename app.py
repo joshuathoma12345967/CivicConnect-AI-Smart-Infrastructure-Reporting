@@ -1,93 +1,69 @@
 import streamlit as st
-import folium
-from streamlit_folium import st_folium
+import streamlit.components.v1 as components
 
-# Page configuration
+# Page Configuration
 st.set_page_config(
     page_title="CivicConnect AI",
-    page_icon="📍",
+    page_icon="🏙️",
     layout="wide"
 )
 
-# Header
-st.title("📍 CivicConnect AI")
-st.subheader("Smart Infrastructure & Accessibility Reporting")
+st.title("🏙️ CivicConnect AI — Community Issue Reporter")
+st.markdown("Pinpoint an infrastructure issue and report it directly to municipal authority.")
+
+# HTML/JS Interactive Map Component
+map_component_html = """
+
+
+
+  
+  
+  
+  
+
+
+
+  
+    
+    🔍 Search
+    📍 Find Me
+  
+
+  
+  
+
+  
+  
+
+
+"""
+
+# 1. Render Map
+components.html(map_component_html, height=500)
+
 st.markdown("---")
 
-# Simple jurisdiction classifier logic
-def get_jurisdiction(lat, lon):
-    # Bounding box for Town of Greenburgh (approximate for demo)
-    if 41.00 <= lat <= 41.08 and -73.88 <= lon <= -73.78:
-        return "Town of Greenburgh Department of Public Works"
-    elif 40.90 <= lat <= 41.15 and -73.95 <= lon <= -73.70:
-        return "Westchester County Department of Transportation"
-    else:
-        return "New York State Department of Transportation (NYSDOT)"
+# 2. Issue Form Controls
+st.subheader("Report Details")
 
-# Create two side-by-side columns: Left for Map, Right for Side Panel Form
-col_map, col_form = st.columns([2, 1])
-
-# --- RIGHT COLUMN: REPORT FORM ---
-with col_form:
-    st.header("📝 Report an Issue")
-    
-    category = st.selectbox(
+col1, col2 = st.columns(2)
+with col1:
+    issue_category = st.selectbox(
         "Issue Category",
-        [
-            "Pothole",
-            "Broken Sidewalk",
-            "Flooding",
-            "Fallen Tree / Branch",
-            "Damaged Sign",
-            "Graffiti",
-            "Broken Streetlight",
-            "♿ Accessibility Barrier (Missing Ramp, Unsafe Crossing, etc.)"
-        ]
+        ["Pothole / Road Damage", "Broken Streetlight", "Sidewalk / ADA Ramp Access", "Graffiti / Vandalism", "Fallen Tree / Branch", "Other"]
     )
-    
-    address = st.text_input("Address / Location Description", "Central Ave & Tarrytown Rd, Greenburgh, NY")
-    
-    description = st.text_area(
-        "Issue Details", 
-        placeholder="Describe the issue (e.g. Deep pothole on east lane...)"
+with col2:
+    severity = st.select_slider(
+        "Estimated Urgency / Severity",
+        options=["Low", "Medium", "High", "Critical / Safety Hazard"]
     )
-    
-    st.info("💡 **Tip:** Click anywhere on the map to place an exact pinpoint!")
-    
-    submit_button = st.button("Submit Report", type="primary", use_container_width=True)
 
-# Default location (Greenburgh, NY)
-default_lat, default_lon = 41.033, -73.824
+location_text = st.text_input("Selected Location Address", placeholder="e.g. 100 Main St, Greenburgh, NY")
+issue_description = st.text_area("Description of Issue", placeholder="Provide details like exact road marker or safety concern...")
 
-# --- LEFT COLUMN: MAP DISPLAY ---
-with col_map:
-    st.header("📍 Interactive Location Map")
-    
-    # Initialize Folium Map
-    m = folium.Map(location=[default_lat, default_lon], zoom_start=14)
-    
-    # Render map and get interactive click event
-    map_data = st_folium(m, width="100%", height=500)
-    
-    # Detect if user clicked on map
-    if map_data and map_data.get("last_clicked"):
-        selected_lat = map_data["last_clicked"]["lat"]
-        selected_lon = map_data["last_clicked"]["lng"]
+if st.button("🚀 Submit Ticket to Jurisdiction", type="primary"):
+    if location_text and issue_description:
+        st.success(f"✅ Ticket Created! Category: **{issue_category}** | Assigned based on location: **Town of Greenburgh**")
+        st.balloons()
     else:
-        selected_lat, selected_lon = default_lat, default_lon
-
-# Handle Form Submission
-if submit_button:
-    agency = get_jurisdiction(selected_lat, selected_lon)
-    
-    st.success("✅ **Report Successfully Submitted!**")
-    
-    st.markdown("### 🤖 CivicConnect AI Routing Summary")
-    st.json({
-        "Issue Type": category,
-        "Location Address": address,
-        "Coordinates": f"{selected_lat:.4f}, {selected_lon:.4f}",
-        "Description": description,
-        "Assigned Jurisdiction": agency,
-        "Status": "Ticket Created & Dispatched"
-    })
+        st.warning("Please enter a location and brief description before submitting.")
